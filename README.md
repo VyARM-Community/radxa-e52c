@@ -2,7 +2,7 @@
 
 Unofficial community ARM64 images for the **Radxa E52C**, built by the [VyOS ARM64 board builder](https://github.com/frogro/vyos-arm64-board-builder).
 
-These images include additional network, Wi-Fi and cellular modem drivers and firmware. Tailscale and KVM profiles are not part of this update channel. Release files are copied unchanged from the central builder; there is no separate board build here.
+VyOS provides routing, firewall and VPN functionality. These images additionally include network, Wi-Fi and cellular modem drivers and firmware for supported hardware.
 
 ## Downloads
 
