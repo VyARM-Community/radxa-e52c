@@ -2,7 +2,7 @@
 
 Unofficial community ARM64 images for the **Radxa E52C**, built by the [VyOS ARM64 board builder](https://github.com/frogro/vyos-arm64-board-builder).
 
-This repository publishes **A+B (base + extended network)** images only. Tailscale and KVM profiles are not part of this update channel. Release files are copied unchanged from the central builder; there is no separate board build here.
+These images include additional network, Wi-Fi and cellular modem drivers and firmware. Tailscale and KVM profiles are not part of this update channel. Release files are copied unchanged from the central builder; there is no separate board build here.
 
 ## Downloads
 
@@ -51,7 +51,7 @@ Image-provided helpers live in `/usr/local/share/vyos-arm64-firstboot/`. Conveni
 
 ## Updates
 
-Only use an **E52C A+B / network** ISO. Earlier E52C installations without the native extlinux lifecycle hooks must first be migrated using a fresh `.img.xz`; do not assume their old ISO installer is compatible. Keep the old boot medium and a configuration backup for recovery.
+Only use an **E52C network** ISO. Earlier E52C installations without the native extlinux lifecycle hooks must first be migrated using a fresh `.img.xz`; do not assume their old ISO installer is compatible. Keep the old boot medium and a configuration backup for recovery.
 
 The board channel uses the native VyOS update-check mechanism. Once its first release is available, configure it on an existing compatible installation with:
 
@@ -64,7 +64,7 @@ exit
 add system image latest
 ```
 
-New channel-enabled A+B installations receive this URL during their first-boot setup. No automatic installation or scheduled update check is enabled. Preserved configurations remain authoritative after image updates; set the URL explicitly when migrating an existing configuration.
+New channel-enabled installations receive this URL during their first-boot setup. No automatic installation or scheduled update check is enabled. Preserved configurations remain authoritative after image updates; set the URL explicitly when migrating an existing configuration.
 
 Alternatively use the full HTTPS URL of the release's ISO:
 
