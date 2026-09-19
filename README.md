@@ -180,6 +180,8 @@ This is separate from the automatic wired DHCP and SSH setup. Run it only when a
 
 ### Configure a modem
 
+Run this helper as the `vyos` user, **without `sudo`**. The script invokes `sudo` internally where required.
+
 ```bash
 /home/vyos/modem-connect.sh
 ```
