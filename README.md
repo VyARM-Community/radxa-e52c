@@ -1,87 +1,263 @@
 # VyOS for Radxa E52C
 
-Unofficial community ARM64 images for the **Radxa E52C**, built by the [VyOS ARM64 board builder](https://github.com/frogro/vyos-arm64-board-builder).
+> Unofficial community build of **VyOS Rolling** for the **Radxa E52C**.
 
-VyOS provides routing, firewall and VPN functionality. These images additionally include network, Wi-Fi and cellular modem drivers and firmware for supported hardware.
+[![GitHub Release](https://img.shields.io/github/v/release/VyARM-Community/radxa-e52c?style=for-the-badge)](https://github.com/VyARM-Community/radxa-e52c/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/VyARM-Community/radxa-e52c/total?style=for-the-badge)](https://github.com/VyARM-Community/radxa-e52c/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/frogro/vyos-arm64-board-builder/build-board-candidate.yml?branch=main-test&style=for-the-badge)](https://github.com/frogro/vyos-arm64-board-builder/actions/workflows/build-board-candidate.yml)
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/FGrootens)
 
-## Downloads
 
-Open [Releases](https://github.com/VyARM-Community/radxa-e52c/releases) and choose:
+## Table of Contents
 
-- `.img.xz` for initial installation or recovery;
-- `.iso` for a supported in-place system-image update;
-- the adjacent `.sha256` file to verify your download.
+- [Quick Start](#quick-start)
+- [First Boot and Login](#first-boot-and-login)
+- [Optional Helper Scripts](#optional-helper-scripts)
+- [Supported Hardware](#supported-hardware)
+- [Releases](#releases)
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
+- [License and Trademarks](#license-and-trademarks)
+- [Support the Project](#️-support-the-project)
 
-The first channel-enabled release is being prepared. Until it is published, there is no usable latest-update feed.
+This repository provides an unofficial VyOS image for the Radxa E52C by combining:
 
-## Initial installation
+- the VyOS ARM64 userspace and configuration system;
+- a board-adapted VyOS kernel, modules and firmware, with the E52C vendor U-Boot boot chain;
+- first-boot networking helpers and additional network, Wi-Fi and cellular modem drivers and firmware.
 
-1. Download the E52C **network** image and its checksum.
-2. Verify it in the download directory: `sha256sum -c <image>.img.xz.sha256`.
-3. Flash the compressed image to the target boot medium with balenaEtcher, or decompress it and write it with a disk-imaging tool. This erases the selected medium.
-4. Connect Ethernet to a network with DHCP, insert the boot medium, and power on.
-5. Find the DHCP address in your router and connect with `ssh vyos@<address>`.
+**Upstream attribution:** VyOS provides the routing userspace and configuration framework; Armbian provides board integration references and boot-chain support; Radxa designs and documents the E52C hardware.
 
-Default login: **vyos / vyos**. Change the password immediately:
+> [!WARNING]
+> This is an independent community project built from components provided by **VyOS**, **Armbian**, and **Radxa** ecosystems. It is not produced, supported, sponsored, certified, or endorsed by the VyOS project, Sentrium S.L., Armbian, Armbian d.o.o., Radxa, or Radxa Computer Co., Ltd. Rolling releases may contain regressions and should be tested before production use.
+
+## Quick Start
+
+### 1. Download the ready-to-use image
+
+Open the [Releases page](https://github.com/VyARM-Community/radxa-e52c/releases) and download:
+
+```text
+vyos-VERSION-radxa-e52c-network.img.xz
+vyos-VERSION-radxa-e52c-network.img.xz.sha256
+```
+
+Verify the download on Linux:
+
+```bash
+sha256sum -c vyos-VERSION-radxa-e52c-network.img.xz.sha256
+```
+
+Use a target drive larger than the uncompressed image and a boot medium supported by the E52C. Replace `VERSION` in all examples with the version from the selected release.
+
+### 2. Flash with balenaEtcher
+
+[balenaEtcher](https://etcher.balena.io/) is available for Linux, Windows, and macOS.
+
+1. Start balenaEtcher.
+2. Select `vyos-VERSION-radxa-e52c-network.img.xz` directly.
+3. Select the target boot medium.
+4. Click **Flash**.
+5. Wait for flashing and verification to finish.
+
+> [!CAUTION]
+> Flashing destroys all data on the selected target drive. Verify the destination carefully.
+
+### 3. Flash from Linux with `dd`
+
+Replace `/dev/sdX` with the complete target device, not a partition such as `/dev/sdX1`.
+
+#### Option A: write the compressed image directly
+
+```bash
+sudo umount /dev/sdX?* 2>/dev/null || true
+xz -dc vyos-VERSION-radxa-e52c-network.img.xz | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+sync
+sudo eject /dev/sdX
+```
+
+#### Option B: extract first, then write
+
+This may be faster on slower systems because decompression and writing do not occur simultaneously.
+
+```bash
+xz -dk vyos-VERSION-radxa-e52c-network.img.xz
+sudo umount /dev/sdX?* 2>/dev/null || true
+sudo dd if=vyos-VERSION-radxa-e52c-network.img of=/dev/sdX bs=4M status=progress conv=fsync
+sync
+sudo eject /dev/sdX
+```
+
+---
+
+## First Boot and Login
+
+1. Connect the E52C Ethernet port to a network that provides DHCP.
+2. Insert or attach the flashed boot drive.
+3. Power on the E52C.
+4. Allow approximately 60–90 seconds for first-boot configuration.
+5. Find the assigned address in your router or DHCP server.
+6. Connect over SSH.
+
+Default credentials for this image:
+
+```text
+Username: vyos
+Password: vyos
+```
+
+Example:
+
+```bash
+ssh vyos@192.168.1.100
+```
+
+Replace the example address with the address assigned to your E52C.
+
+> [!IMPORTANT]
+> Change the default password immediately after the first login. For stronger security, configure SSH key authentication and stop using password-based login.
+
+Change the password:
 
 ```text
 configure
-set system login user vyos authentication plaintext-password 'YOUR-NEW-PASSWORD'
+set system login user vyos authentication plaintext-password 'YOUR_NEW_PASSWORD'
 commit
 save
 exit
 ```
 
-First-boot setup configures a detected wired interface for DHCP and enables SSH. Use a trusted setup network. The serial console is `ttyS2`, 1500000 baud.
+Check Ethernet locally from the serial console (`ttyS2`, 1500000 baud):
 
-## Setup helpers
-
-Image-provided helpers live in `/usr/local/share/vyos-arm64-firstboot/`. Convenience links for the recurring helpers appear in the `vyos` home directory. Run them as `vyos`, not with `sudo`:
-
-```text
-./set-locales.sh
-./ap-dhcp-wan-setup.sh
-./modem-connect.sh
+```bash
+ip -4 -br addr show eth0
 ```
 
-- `set-locales.sh`: timezone, keyboard, wireless country, DNS and NTP setup.
-- `ap-dhcp-wan-setup.sh`: guided AP/network setup; requires supported wireless hardware.
-- `modem-connect.sh`: supported modem setup, using native WWAN where possible and helpers where required. A manual setup replaces the previous modem setup.
-- `dhcp-wan-ssh-setup.sh`: initial wired DHCP/SSH setup; normally invoked automatically once. If needed, call `/usr/local/share/vyos-arm64-firstboot/dhcp-wan-ssh-setup.sh --help`.
+<details>
+<summary><strong>First-boot diagnostics</strong></summary>
 
-## Updates
-
-Only use an **E52C network** ISO. Earlier E52C installations without the native extlinux lifecycle hooks must first be migrated using a fresh `.img.xz`; do not assume their old ISO installer is compatible. Keep the old boot medium and a configuration backup for recovery.
-
-The board channel uses the native VyOS update-check mechanism. Once its first release is available, configure it on an existing compatible installation with:
-
-```text
-configure
-set system update-check url 'https://github.com/VyARM-Community/radxa-e52c/releases/latest/download/image-version.json'
-commit
-save
-exit
-add system image latest
+```bash
+cat /config/dhcp-wan-firstboot-wrapper.log
+cat /config/dhcp-wan-ssh-setup.log
+systemctl status dhclient@eth0.service --no-pager -l
 ```
 
-New channel-enabled installations receive this URL during their first-boot setup. No automatic installation or scheduled update check is enabled. Preserved configurations remain authoritative after image updates; set the URL explicitly when migrating an existing configuration.
-
-Alternatively use the full HTTPS URL of the release's ISO:
+The first-boot marker is:
 
 ```text
-add system image https://github.com/VyARM-Community/radxa-e52c/releases/download/<tag>/<image>.iso
+/config/.dhcp-wan-ssh-firstboot-done
 ```
 
-Follow the installer prompts and retain the previous image. Reboot when ready. The board uses vendor U-Boot/extlinux with VyOS image lifecycle hooks. To select a retained image, use `set system image default-boot <image-name>` in operational mode. Image renaming is not supported on this boot provider.
+</details>
 
-## Validation and limitations
+---
 
-Check each release's hardware-test status and known limitations. Successful CI checks do not replace testing that exact image on hardware. Driver inclusion does not guarantee support for every modem or peripheral.
+## Optional Helper Scripts
 
-The published official VyOS Rolling is a reference. Packages may differ because these ARM64 images are built later against the rolling package repository. Board kernel, firmware and selected profile additions are intentional differences.
+The image includes helper scripts under `/usr/local/share/vyos-arm64-firstboot/`, with convenience links in `/home/vyos`. Run the setup helpers as the `vyos` user.
 
-## Sources and attribution
+### Configure a wireless access point
 
-Build sources, patches, provenance and reports are maintained in the [central builder](https://github.com/frogro/vyos-arm64-board-builder). Each release identifies its source build. Components retain their respective licenses; consult the source references and installed `/usr/share/doc/*/copyright` files.
+```bash
+/home/vyos/ap-dhcp-wan-setup.sh
+```
 
-This is an independent community project, not an official or endorsed release of VyOS, Armbian or Radxa.
+This is separate from the automatic wired DHCP and SSH setup. Run it only when an access point, DHCP server, DNS forwarding, and NAT are required.
+
+### Configure a modem
+
+```bash
+/home/vyos/modem-connect.sh
+```
+
+Modem support depends on the modem, transport, drivers, firmware, carrier, and APN.
+
+---
+
+## Supported Hardware
+
+Peripheral results below are project-level references, not confirmation that every listed device has been tested on this exact E52C image. Consult the release notes for board-specific validation.
+
+### Wi-Fi adapters
+
+`ap-dhcp-wan-setup.sh` does not hard-code a specific chipset. It enumerates every `phy` under `/sys/class/ieee80211`, reads supported interface modes from the kernel with `iw phy <phy> info`, and only offers devices that report AP mode support.
+
+#### Hardware reported working with the project
+
+- MediaTek MT7921-class M.2/PCIe Wi-Fi 6 adapters
+- Realtek RTL8852-class M.2/PCIe Wi-Fi 6 adapters
+- MediaTek MT7612U-based USB adapters
+
+#### Expected to work
+
+- Other Linux `mac80211` adapters that advertise AP mode
+
+Adapters whose drivers only support client or station mode cannot be used by the AP helper.
+
+Useful diagnostics:
+
+```bash
+ip link show
+iw dev
+dmesg
+```
+
+### Cellular modems
+
+`modem-connect.sh` supports PCIe- and USB-attached modems, preferring native VyOS WWAN configuration where supported and using helpers for device-specific initialization and the AT/RNDIS fallback path.
+
+#### Tested with the project
+
+- Fibocom FM350-GL (Revision: 81600.0000.00.29.24.02,  SVN: 10), including automatic FCC unlock over the AT port
+
+#### Expected to work with compatible drivers and firmware
+
+- Quectel RM505Q
+- Intel XMM7560-based modems
+- Other QMI- or MBIM-capable modems supported by ModemManager
+
+Actual connectivity also depends on the SIM carrier, APN, regional firmware, and supported bands.
+
+---
+
+## Releases
+
+Prebuilt images are published on the [GitHub Releases page](https://github.com/VyARM-Community/radxa-e52c/releases).
+
+Each release should normally contain:
+
+```text
+vyos-VERSION-radxa-e52c-network.img.xz
+vyos-VERSION-radxa-e52c-network.img.xz.sha256
+```
+
+Use the compressed `.img.xz` for initial installation. A matching `.iso` and `.iso.sha256` are provided for supported system-image updates.
+
+See [CHANGELOG.md](CHANGELOG.md) for the changes in each release.
+
+The published VyOS Rolling is a reference; package versions may differ because the image is built later against the rolling package repository.
+
+---
+
+## License and Trademarks
+
+The repository contains or builds software from multiple upstream projects. Their respective licenses remain in effect. Review the license and copyright files included in the repository and generated image.
+
+“VyOS” and associated marks are trademarks of their respective owner. “Armbian” and associated marks are trademarks of Armbian d.o.o. “Radxa”, “E52C”, and associated marks are trademarks of Radxa Computer Co., Ltd.
+
+These names are used solely to identify compatibility, upstream software, boot-chain and kernel components, and supported hardware. No affiliation, sponsorship, certification, or endorsement is claimed.
+
+This repository does not redistribute third-party logo artwork.
+
+---
+
+## ❤️ Support the Project
+
+If this project saved you time or made it easier to run VyOS on the Radxa E52C, please consider supporting its development.
+
+Contributions help cover hardware, testing, maintenance, and development time.
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/FGrootens)
+
+Thank you for your support. ☕
