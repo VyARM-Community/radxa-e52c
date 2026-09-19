@@ -156,7 +156,7 @@ The first-boot marker is:
 
 ## Optional Helper Scripts
 
-The image includes helper scripts under `/usr/local/share/vyos-arm64-firstboot/`, with convenience links in `/home/vyos`. Run the setup helpers as the `vyos` user.
+The image includes helper scripts under `/usr/local/share/vyos-arm64-firstboot/`, with convenience links in `/home/vyos`. Start from the `vyos` account and use the command shown for each helper below.
 
 ### Configure locale, time and regional settings
 
@@ -180,10 +180,10 @@ This is separate from the automatic wired DHCP and SSH setup. Run it only when a
 
 ### Configure a modem
 
-Run this helper as the `vyos` user, **without `sudo`**. The script invokes `sudo` internally where required.
+Run this helper from the `vyos` account **with `sudo`**. Unlike the AP and locale helpers, the modem setup script explicitly requires root privileges.
 
 ```bash
-/home/vyos/modem-connect.sh
+sudo /home/vyos/modem-connect.sh
 ```
 
 Modem support depends on the modem, transport, drivers, firmware, carrier, and APN.
