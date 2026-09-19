@@ -14,6 +14,7 @@
 - [First Boot and Login](#first-boot-and-login)
 - [Optional Helper Scripts](#optional-helper-scripts)
 - [Supported Hardware](#supported-hardware)
+- [Updates](#updates)
 - [Releases](#releases)
 - [Changelog](CHANGELOG.md)
 - [Contributing](CONTRIBUTING.md)
@@ -157,6 +158,16 @@ The first-boot marker is:
 
 The image includes helper scripts under `/usr/local/share/vyos-arm64-firstboot/`, with convenience links in `/home/vyos`. Run the setup helpers as the `vyos` user.
 
+### Configure locale, time and regional settings
+
+Run this helper as the `vyos` user, without `sudo`:
+
+```bash
+/home/vyos/set-locales.sh
+```
+
+It guides you through the time zone, console keyboard layout, wireless regulatory country, DNS servers and NTP servers. It also persists the system locale as `C.UTF-8`, restarts Chrony and checks time synchronization. Review the proposed settings before applying them. Committing wireless settings may briefly restart an active access point.
+
 ### Configure a wireless access point
 
 ```bash
@@ -218,6 +229,64 @@ dmesg
 - Other QMI- or MBIM-capable modems supported by ModemManager
 
 Actual connectivity also depends on the SIM carrier, APN, regional firmware, and supported bands.
+
+---
+
+## Updates
+
+### Update through the board channel
+
+The E52C update channel provides images for this board with additional network support. On new channel-enabled installations, first-boot setup configures the native VyOS update URL. An existing administrator-defined URL is preserved. No automatic image installation is enabled.
+
+For an existing compatible installation, configure the channel explicitly:
+
+```text
+configure
+set system update-check url 'https://github.com/VyARM-Community/radxa-e52c/releases/latest/download/image-version.json'
+commit
+save
+exit
+```
+
+Then, from operational mode:
+
+```text
+add system image latest
+```
+
+The channel becomes usable when the first release containing `image-version.json` has been published. The URL is a release-information feed; the installer obtains the matching ISO download URL from it.
+
+### Update using a specific ISO
+
+Alternatively, copy the full HTTPS download link of the desired `.iso` from the [Releases page](https://github.com/VyARM-Community/radxa-e52c/releases):
+
+```text
+add system image https://github.com/VyARM-Community/radxa-e52c/releases/download/RELEASE_TAG/vyos-VERSION-radxa-e52c-network.iso
+```
+
+Replace `RELEASE_TAG` and `VERSION` with the actual release values. Use the `.iso` for system-image updates; `.img.xz` is intended for initial installation or recovery.
+
+### Configuration, reboot and rollback
+
+1. Save your current configuration with `configure`, `save`, then `exit`, and keep a separate backup of `/config/config.boot`.
+2. Run one of the installation commands above and follow its prompts. Choose to retain the current configuration when requested.
+3. Keep the previous working image as a fallback. Use `show system image` to inspect the installed images and boot selection.
+4. Reboot when ready with `reboot`.
+5. Check networking and the configured services after boot.
+
+To select a retained image for the next boot, use its exact name from `show system image`:
+
+```text
+set system image default-boot IMAGE_NAME
+reboot
+```
+
+These are operational-mode commands. The E52C uses vendor U-Boot/extlinux with board-specific hooks for the native VyOS image lifecycle. Image renaming is not supported on this boot path.
+
+> [!IMPORTANT]
+> Older E52C installations without these extlinux lifecycle hooks cannot safely migrate through their old ISO installer. Use a fresh `.img.xz` installation for that migration and retain the old boot medium for recovery. Only install an ISO matching the E52C and the installed image variant. Consult the release notes for the validation status of the exact image.
+
+Preserved configurations remain authoritative after an update: an older configuration does not automatically receive the new channel URL. Use the configuration commands above when needed.
 
 ---
 
