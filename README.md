@@ -236,7 +236,7 @@ Actual connectivity also depends on the SIM carrier, APN, regional firmware, and
 
 ### Update through the board channel
 
-**On a fresh installation of the channel-enabled image, the E52C update channel is configured automatically during first-boot setup.** You do not need to enter an update URL. No automatic image installation is enabled.
+**On a fresh installation, the E52C update channel is configured automatically during first-boot setup.** You do not need to enter an update URL. No automatic image installation is enabled.
 
 To install the latest image, run this command in operational mode:
 
@@ -245,23 +245,6 @@ add system image latest
 ```
 
 Follow the installer prompts, retain your configuration and previous image, then reboot when ready as described below.
-
-<details>
-<summary><strong>Existing installations: configure the channel once if it is missing</strong></summary>
-
-If you retain an older configuration when installing a new image, the channel URL is not automatically added. An existing administrator-defined URL is also preserved. On a compatible installation, set the E52C channel once:
-
-```text
-configure
-set system update-check url 'https://github.com/VyARM-Community/radxa-e52c/releases/latest/download/image-version.json'
-commit
-save
-exit
-```
-
-After that, use `add system image latest` for subsequent updates.
-
-</details>
 
 The channel becomes usable when the first release containing `image-version.json` has been published. This feed points to the matching E52C ISO with additional network support.
 
@@ -291,11 +274,6 @@ reboot
 ```
 
 These are operational-mode commands. The E52C uses vendor U-Boot/extlinux with board-specific hooks for the native VyOS image lifecycle. Image renaming is not supported on this boot path.
-
-> [!IMPORTANT]
-> Older E52C installations without these extlinux lifecycle hooks cannot safely migrate through their old ISO installer. Use a fresh `.img.xz` installation for that migration and retain the old boot medium for recovery. Only install an ISO matching the E52C and the installed image variant. Consult the release notes for the validation status of the exact image.
-
-Preserved configurations remain authoritative after an update: an older configuration does not automatically receive the new channel URL. Use the configuration commands above when needed.
 
 ---
 
