@@ -236,9 +236,20 @@ Actual connectivity also depends on the SIM carrier, APN, regional firmware, and
 
 ### Update through the board channel
 
-The E52C update channel provides images for this board with additional network support. On new channel-enabled installations, first-boot setup configures the native VyOS update URL. An existing administrator-defined URL is preserved. No automatic image installation is enabled.
+**On a fresh installation of the channel-enabled image, the E52C update channel is configured automatically during first-boot setup.** You do not need to enter an update URL. No automatic image installation is enabled.
 
-For an existing compatible installation, configure the channel explicitly:
+To install the latest image, run this command in operational mode:
+
+```text
+add system image latest
+```
+
+Follow the installer prompts, retain your configuration and previous image, then reboot when ready as described below.
+
+<details>
+<summary><strong>Existing installations: configure the channel once if it is missing</strong></summary>
+
+If you retain an older configuration when installing a new image, the channel URL is not automatically added. An existing administrator-defined URL is also preserved. On a compatible installation, set the E52C channel once:
 
 ```text
 configure
@@ -248,13 +259,11 @@ save
 exit
 ```
 
-Then, from operational mode:
+After that, use `add system image latest` for subsequent updates.
 
-```text
-add system image latest
-```
+</details>
 
-The channel becomes usable when the first release containing `image-version.json` has been published. The URL is a release-information feed; the installer obtains the matching ISO download URL from it.
+The channel becomes usable when the first release containing `image-version.json` has been published. This feed points to the matching E52C ISO with additional network support.
 
 ### Update using a specific ISO
 
