@@ -170,6 +170,8 @@ It guides you through the time zone, console keyboard layout, wireless regulator
 
 ### Configure a wireless access point
 
+Run this helper as the `vyos` user, **without `sudo`**. The script invokes `sudo` internally where required.
+
 ```bash
 /home/vyos/ap-dhcp-wan-setup.sh
 ```
